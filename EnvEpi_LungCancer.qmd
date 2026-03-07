@@ -56,3 +56,160 @@ Mortality patterns reflect these incidence trends. Globally, LC mortality rate i
 Risk factors for LC in Israel align with global patterns but also show local nuances. Tobacco smoking remains the predominant cause, implicated in an estimated 85% of cases. However, urban air pollution—especially in densely populated areas like Tel Aviv and Haifa—and occupational exposures such as asbestos also play significant roles. Furthermore, disparities exist across population groups: Arab Israeli populations face disproportionately higher incidence and mortality rates, often due to delayed diagnoses and reduced access to screening services (GBD 2021 HAP Collaborators, 2025).
 
 Looking ahead, projections suggest a modest increase in LC burden among Israeli women, linked to historical smoking behaviours and delayed engagement with preventive health services. Globally, although incidence in men is decreasing, the overall burden is shifting toward low- and middle-income countries. Israel as a high-income but geographically diverse nation with urban air quality challenges may experience similar shifts if environmental risks are not mitigated (George et al., 2025).
+
+The comparative figures for incidence, mortality, gender-specific trends, risk factors, and screening coverage in Israel versus the global burden are summarized in *Table 2.1.1*.
+
+```{r}
+#| label: tbl-2-1-1
+#| tbl-cap: "Comparative burden of lung cancer in Israel and worldwide, 2023–2025"
+
+library(knitr)
+library(kableExtra)
+
+tbl_2_1_1 <- data.frame(
+  Metric = c(
+    "Incidence (ASIR), per 100,000",
+    "Mortality, per 100,000",
+    "Gender trend",
+    "Top risk factors",
+    "Screening program",
+    "Mortality rank (among cancers)"
+  ),
+  Israel = c(
+    "22.4 (men: 31.2; women: 13.6)",
+    "15.6",
+    "↓ men, ↑ women",
+    "smoking, air pollution, late screening",
+    "limited",
+    "#1 in men, #2–3 in women"
+  ),
+  Global = c(
+    "30.5 (men: 43.4; women: 17.6)",
+    "~18",
+    "↓ men, ↑ women",
+    "smoking, occupational exposure, air pollution",
+    "expanding in high-income countries",
+    "#1 globally"
+  )
+)
+
+kable(tbl_2_1_1, 
+      col.names = c("Metric", "Israel", "Global"),
+      align = c("l", "l", "l")) |>
+  kable_styling(bootstrap_options = c("striped", "bordered"),
+                full_width = TRUE)
+```
+
+Research in Israel has placed particular emphasis on Haifa and its surrounding bay area, which is the country’s most industrialized and heavily polluted region. Several studies have consistently reported elevated cancer risks, including LC, among local populations.
+
+More than a decade ago, population-based cancer registry data have demonstrated that residents of Haifa Bay experience higher rates of organ-specific cancers, including LC, compared with the rest of Israel. A complementary investigation on chronic exposure to heavy metals and industrial pollutants linked to the petrochemical industry in Haifa also found elevated lung cancer cases in the area (Blaurock-Busch et al., 2015).
+
+More recent epidemiological research using registry-based cohorts confirmed that long-term residence near the Haifa industrial complex was associated with a significantly increased risk of several cancers, with LC among the most prominent (Kayyal-Tarabeia et al., 2023). Environmental exposure studies that examined adolescents exposed to industrial air pollution in Haifa Bay further showed a strong association between early-life pollution exposure and increased risk of LC in young adulthood (Lev Bar-Or et al., 2023).
+
+Spatial analyses support these findings. A study applying kernel density functions demonstrated a geographical overlap between lung cancer cases and sulfur dioxide pollution in the Haifa metropolitan area, highlighting a strong environmental component (Portnov et al., 2009). Another spatial analysis of cancer incidence rates found clustering of lung cancer and other cancers in areas with higher levels of industrial emissions in Haifa Bay (Eitan et al., 2010).
+
+At the clinical level, molecular epidemiology works also reported that patients with lower integrated DNA repair capacity scores were at greater risk of LC, underlining the interplay between environmental exposures and genetic susceptibility.
+
+Together, these studies indicate that the Haifa Bay area constitutes a high-risk region for LC in Israel, due to the combined effects of industrial air pollution, environmental exposures, and individual biological vulnerabilities.
+
+Chapter 2.2. Role of genetic markers in LC
+------------------------------------------
+
+LC management has become increasingly dependent on molecular characterization, with several biomarkers guiding prognosis and therapy. Their alterations not only shape tumor biology but also determine prognosis and therapeutic decision-making in precision oncology. Below, key LC markers are discussed in some detail.
+
+### Programmed death-ligand 1 (PD-L1)
+
+***PD-L1*** is a cell-cycle checkpoint molecule expressed on tumor cells, enabling evasion from cytotoxic T-cell response. It is a predictive biomarker for response to immune checkpoint inhibitors used against LC, particularly pembrolizumab and nivolumab (Tuminello et al., 2020). PD-L1 expression is measured by ***tumor proportion score (TPS)*** - the percentage of viable tumor cells that express PD-L1 on their surface.
+
+### Mesenchymal–epithelial transition proto-oncogene (MET)
+
+MET alterations in LC typically arise via gene amplification or exon 14 skipping mutations, which deregulate receptor degradation and promote sustained MET signalling. In resected non-small cell lung cancer (NSCLC), MET overexpression or increased copy number correlate with worse prognosis and aggressive tumor phenotype (Finocchiaro et al., 2015). In advanced disease, patients harboring MET exon 14 skipping mutations have historically had poor outcomes without targeted therapy; however, selective MET inhibitors have shown improved survival in MET-dysregulated NSCLC (Santarpia et al., 2021). The adoption of MET inhibitors has made MET a clinically actionable driver in a subset of LCs.
+
+### Epidermal growth factor receptor (EGFR)
+
+EGFR activating mutations (e.g. exon 19 deletions, L858R) drive oncogenic signalling via MAPK/PI3K pathways and are among the earliest clinically targetable markers in LC. EGFR mutant NSCLC treated with EGFR tyrosine kinase inhibitors tend to have substantially improved progression-free survival compared to chemotherapy (Su et al., 2025). Patients with EGFR mutations tend to have longer survival if managed with appropriate targeted therapy. EGFR status is also used to exclude or stratify patients for immunotherapy, as EGFR-mutated tumors may respond less favorably to checkpoint inhibitors.
+
+### B-Raf proto-oncogene (BRAF)
+
+BRAF mutations (notably V600E) are less common in LC but represent a distinct actionable driver. BRAF V600E mutation activates the MAPK pathway independently of upstream signalling. Use of BRAF and MEK inhibitors (e.g., dabrafenib + trametinib) has been approved in NSCLC harboring BRAF V600E, improving response rates over standard therapy (Farago & Azzoli, 2017). 
+
+In prognosis, BRAF mutations do not yet have robust independent prognostic value beyond their predictive role for targeted therapy, though they mark a subset of tumors with distinct biology and possible resistance patterns.
+
+### Kirsten rat sarcoma (KRAS)
+
+KRAS mutations are among the most frequent driver alterations in lung adenocarcinoma (ACA) and activate downstream RAF/MEK/ERK signalling independent of receptor input. Historically, KRAS mutations have been associated with poorer prognosis and limited targeted therapy options, although the emergence of KRAS G12C inhibitors is changing the paradigm. In NSCLC, KRAS-mutant tumors often co-occur with resistance pathways (e.g., MET) (Garcia-Robledo et al., 2022). Recent clinical trials of KRAS G12C inhibitors (e.g., sotorasib, adagrasib) show meaningful responses and are shaping new standards in KRAS-driven LC.
+
+### Erythroblastic oncogene B 2 (ERBB2) / human epidermal growth factor receptor 2 (HER2)
+
+ERBB2 (HER2) alterations in LC include mutations, amplification, or overexpression, often mutually exclusive of other drivers. ERBB2 (HER2) mutations are relatively rare (~ 1–4 % of NSCLC) but are enriched in lung ACA and may respond to HER2-targeted agents (e.g., trastuzumab deruxtecan) (Ren et al., 2022). The prognostic significance of HER2 alterations is somewhat ambiguous: while HER2 amplification is sometimes linked to more aggressive features (e.g. larger tumor size, pleural invasion), the value of HER2 status as a pure prognostic marker is less established (Ferrari et al., 2024). Clinically, HER2-positive tumors are a subset considered for experimental HER2-directed therapy trials in NSCLC.
+
+### Anaplastic lymphoma kinase (ALK)
+
+ALK rearrangements (e.g., EML4-ALK fusion) produce constitutively active fusion kinases promoting proliferation and survival via downstream PI3K/AKT and RAS/MAPK pathways. ALK-positive NSCLC tends to occur in younger, non-smoking patients and is typically associated with favorable response to ALK inhibitors (e.g. crizotinib, alectinib, lorlatinib). The presence of ALK rearrangement is thus both prognostic in the sense of predicting effective targeted therapy and predictive of favorable benefit from ALK inhibition.
+
+### C-ros oncogene 1 (ROS1)
+
+ROS1 gene fusions (e.g., CD74-ROS1) produce constitutively active tyrosine kinase signalling analogous to ALK, though representing a smaller fraction (~ 1–2 %) of NSCLC. ROS1 fusion–positive patients show strong and durable responses to ROS1 inhibitors (e.g., crizotinib, entrectinib, lorlatinib) compared to conventional chemo. The ROS1-positive group may also have a generally favorable prognosis when treated with targeted agents because of high sensitivity to these therapies. ROS1 testing is standard in driver panels in NSCLC (Mesquita et al., 2025).
+
+### Neurotrophic tyrosine receptor kinases (NTRK)
+
+NTRK fusions (gene rearrangements involving NTRK1, NTRK2, NTRK3) lead to ligand-independent activation of tropomyosin receptor kinase (TRK) signalling, driving oncogenesis. Although rare in LC, NTRK fusions are high-priority actionable alterations, as TRK inhibitors (e.g., entrectinib, larotrectinib) demonstrate high response rates independent of tumor histology. The presence of NTRK fusion tends to predict dramatic responses to these inhibitors, although prognostic value beyond therapeutic sensitivity is less well defined (Doebele et al., 2019). These alterations are therefore of great interest in precision oncology even in low-prevalence settings.
+
+### Rearranged during transfection (RET)
+
+RET gene fusions (e.g., KIF5B-RET, CCDC6-RET) activate downstream intracellular signalling and are present in ~ 1–2 % of NSCLC. RET fusion–positive patients derive benefit from selective RET inhibitors (e.g., selpercatinib, pralsetinib), which have shown improvements in response rate and progression-free survival. RET fusions have prognostic implications insofar as patients receiving targeted RET inhibition fare better compared to non-targeted therapy, but their baseline prognosis prior to therapy is not as clearly established (Andrini et al., 2022).
+
+### Mismatch repair (MMR)
+
+MMR genes (MLH1, PMS2, MSH2, MSH6) are pivotal for correcting base–base mismatches and small insertion/deletion loops during DNA replication; the deficiency leads to microsatellite instability (MSI) and accumulation of mutations. In LC, MSI is relatively uncommon, but when present, high mutation burden may sensitize tumors to immune checkpoint blockade. Deficient MMR status confers a higher neoantigen load, which may predict more durable response to PD-1/PD-L1 inhibitors. Although its independent prognostic significance in LC is less clearly defined due to low prevalence, MMR deficiency is a predictive biomarker for immunotherapy responsiveness in multiple tumor types and increasingly explored in LC settings (Le et al., 2017).
+
+Chapter 2.3. Role of air pollution in LC
+----------------------------------------
+
+While the previous section addressed the role of molecular and genetic alterations in shaping LC prognosis and treatment, it is equally crucial to recognize the environmental exposures that initiate and promote malignant transformation. Among these, ambient air pollution stands out as a major public health concern and a well-established carcinogenic agent (classified as Group 1 by IARC). Air pollutants represent a complex mixture of toxicants capable of inducing DNA damage, oxidative stress, and chronic inflammation, thereby complementing and interacting with the genetic susceptibilities described earlier. From a toxicological and epidemiological perspective, several pollutants — including nitrogen oxides (NOx, including NO₂), carbon monoxide (CO), sulfur dioxide (SO₂), ozone (O₃), and so-called particulate matter (PM₁₀ and PM₂.₅)—have been most consistently linked with LC incidence and mortality. The following subsections summarize current evidence regarding their relevance.
+
+### Nitrogen dioxide (NO₂)
+
+***NO₂***, mainly from combustion (traffic, power plants), is frequently used as a proxy of traffic-related air pollution. Higher NO₂ exposure is significantly associated with increased LC incidence (Yoon et al., 2024). A meta-analysis of long-term air pollution and LC also reported a positive association between residential NO₂ levels and LC risk and mortality (Chen et al., 2024). 
+
+NO₂ and its reactive nitrogen derivatives may generate oxidative stress, DNA damage, and promote inflammation in lung tissue, contributing to carcinogenesis. The consistent epidemiologic signal across settings makes NO₂ one of the more robust non-particulate pollutants in LC studies.
+
+### Other NO~x~ 
+
+***NO~x~*** refers to nitrogen oxides generally (including NO and NO₂). Most epidemiological studies do not separate NO from NO₂, so the evidence is dominated by NO₂. However, ***NO~x~*** may capture additional sources (e.g., industrial emissions) and serve as an upstream precursors to secondary pollutants (ozone, nitrates, etc.). Some pooled pollution analyses include ***NO~x~*** as an exposure metric correlated with LC outcomes, though the effect estimates are typically weaker or less precisely estimated than for NO₂. 
+### Carbon monoxide (CO) 
+
+CO arises from incomplete combustion (vehicles, heating). The direct epidemiological linkage between CO and LC is relatively sparse in recent years. Some general air-pollution reviews note CO as one of the ambient pollutants monitored for lung function effects, but seldom as an independent LC risk factor (Meo et al., 2024).
+
+CO has less direct carcinogenic potential compared to oxidants; its toxicity is more classically associated with interference in oxygen delivery. In LC etiologic models, ***CO*** is more of a co-pollutant (***covariate***) than a primary suspect.
+
+### Sulfur dioxide (SO₂)
+
+SO₂ is primarily produced from fossil fuel combustion, especially of sulfur-containing coal and fuel oil. In a recent large scale study, SO₂ exposure was positively associated with LC incidence (and kidney cancer), even after adjustment for other pollutants (Diver et al., 2023). 
+
+In some ecological/temporal analyses, SO₂ ranked second after NO₂ in its association strength with LC incidence and mortality (Wang et al., 2022). 
+The pathogenetic role of SO₂ involves irritation, chronic inflammation, and generation of reactive sulfur species in the lung microenvironment. However, the epidemiologic evidence is less consistent and effect sizes tend to be smaller than for PM₂.₅ or NO₂.
+
+### Ozone (O₃)
+
+***O₃*** is a secondary pollutant formed by photochemical reactions of NO~x~ and volatile organic compounds. Long-term ambient O₃ exposure was significantly associated with increased LC incidence (Wu et al., 2025). 
+
+While the biological impact is plausible (oxidative stress, epithelial injury), O₃ associations in LC remain relatively newer and require confirmation across populations.
+
+### Particulate matter with the particles diameter ≤ 10 µm (PM₁₀)
+
+***PM₁₀*** represents coarse plus fine particles. Its epidemiological association with LC is more variable. A recent study in Italy found no significant association between historical PM₁₀ exposure (range ~ 6.3–41.9 µg/m³) and LC mortality after adjustment for major covariates. However, in some Asian cohorts (e.g. South Korea), PM₁₀ was modestly associated with lung ACA incidence in male smokers (Fedrizzi et al., 2025).
+
+Because PM₁₀ includes larger particles that deposit more proximally in airways, its etiologic potency is generally lower than PM₂.₅. When PM₂.₅ is present in multipollutant models, the independent effect of PM₁₀ diminishes.
+
+### Particulate matter with the particles diameter ≤ 2.5 µm (PM₂.₅) 
+
+***PM₂.₅*** is the most strongly and consistently implicated particulate pollutant in LC epidemiology. Multiple cohort and mortality studies linked long-term exposure to PM₂.₅ with LC incidence and mortality (Cheng et al., 2024; Wang et al., 2025). 
+
+Because fine particles can reach deep alveoli and translocate inflammatory signals, PM₂.₅ is biologically more hazardous than coarser particulate matter’s fractions. The epidemiological evidence supports a dose-response shape even at low exposures, strengthening the causal inference.
+
+Part III. Data analysis
+=======================
+
+
+
