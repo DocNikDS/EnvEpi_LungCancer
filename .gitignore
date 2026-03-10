@@ -7,40 +7,33 @@ __pycache__/
 *.pkl
 *.h5
 *.db-journal
-
 # Quarto / Pandoc
 _quarto/
 *.log
 *.aux
 *.out
 *.toc
-
 # Jupyter Notebooks (if ever used)
 .ipynb_checkpoints/
-
 # Visual Studio Code
 .vscode/
 *.code-workspace
-
 # OS-specific
 .DS_Store
 Thumbs.db
-
 # Environment
 .env
 .venv/
 env/
 venv/
-
 # SPSS
-
 # data
 data/**
 !data/README.md
-
 # spss binaries
 *.sav
 *.zsav
 *.por
 *.spv
 .Rproj.user
+NikolaiDanilov_EnvEpi_SeminarWork.docx

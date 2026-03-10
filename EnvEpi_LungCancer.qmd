@@ -23,7 +23,9 @@ execute:
 engine: knitr
 ---
 
+::: {.callout-note appearance="minimal"}
 *Course instructor: Jonathan Dubnov, MD, MPH | Environmental Epidemiology, School of Public Health, University of Haifa*
+:::
 
 ---
 
@@ -43,7 +45,7 @@ Methods
 
 The dataset comprised 94 anonymized LC cases extracted from the Ofek platform. After loading, variables were recoded as factors with descriptive labels to facilitate analysis and visualization. All analyses were performed in R programming language. The report was authored in Quarto to ensure full reproducibility.
 
-*Table 1* summarizes all variables included in the dataset. The variables are described according to a syntactical approach, primarily distinguishing only between numeric and character. Under this approach, the functional role of a variable (continuous, discrete count, binary flag, or categorical) is determined by
+*@tbl-dictionary* summarizes all variables included in the dataset. The variables are described according to a syntactical approach, primarily distinguishing only between numeric and character. Under this approach, the functional role of a variable (continuous, discrete count, binary flag, or categorical) is determined by
 its analytical use rather than by its storage type.
 
 ```{r}
@@ -91,14 +93,13 @@ dict %>%
 Data analysis
 =============
 
-The dataset comprised 94 anonymized LC cases extracted from the Ofek platform. After loading, variables were recoded as factors with descriptive labels to facilitate analysis and visualization.
-
 ```{r}
 #| label: setup
 #| echo: false
 
 library(readxl)
 library(dplyr)
+library(ggplot2)
 library(knitr)
 library(kableExtra)
 ```
@@ -476,6 +477,7 @@ map_adj
 #| warning: false
 #| message: false
 
+library (ggplot2)
 library(spdep)
 
 # Aggregating by locality
@@ -536,9 +538,9 @@ ggplot(moran_df, aes(x = inc_std, y = sp_lag, colour = quadrant)) +
                           "\np (permutation) = ", mi_p),
            hjust = 1.1, vjust = 1.5, size = 3.5, colour = "grey30") +
   labs(
-    x      = "Standardised incidence (deviation from mean)",
-    y      = "Spatial lag (mean of neighbours)",
-    colour = "Cluster type"
+    x      = "Standardized incidence (deviation from mean)",
+    y      = "Spatial lag (mean of neighbors)",
+    color = "Cluster type"
   ) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
@@ -598,11 +600,11 @@ leaflet(loc_data) %>%
   )
 ```
 
-LISA analysis identified three statistically significant Low–High outliers (p < 0.05): Beitegen, Fassuta, and Kiryat Shmona — localities with relatively low incidence surrounded by higher-incidence neighbours (Table 3.2.2). No High–High hotspots or High–Low outliers reached statistical significance. This absence of significant local clustering corroborates the global Moran's I result (I = −0.008, p = 0.373) and is consistent with the conclusion that apparent geographic gradients in crude case maps are attributable to population size distribution and smoking prevalence rather than true spatial clustering of risk.
+LISA analysis identified three statistically significant Low–High outliers (p < 0.05): Beitegen, Fassuta, and Kiryat Shmona — localities with relatively low incidence surrounded by higher-incidence neighbors (*@tbl-lisa*). No High–High hotspots or High–Low outliers reached statistical significance. This absence of significant local clustering corroborates the global Moran's I result (I = −0.008, p = 0.373) and is consistent with the conclusion that apparent geographic gradients in crude case maps are attributable to population size distribution and smoking prevalence rather than true spatial clustering of risk.
 
 ```{r}
 #| label: tbl-lisa
-#| tbl-cap: "Localities classified as statistically significant LISA clusters (p < 0.05). Both identified localities are Low–High outliers — low incidence surrounded by higher-incidence neighbors."
+#| tbl-cap: "Localities classified as statistically significant LISA clusters (p < 0.05). All three identified localities are Low–High outliers — low incidence surrounded by higher-incidence neighbors."
 
 lisa_sig <- loc_data %>%
   mutate(
@@ -700,7 +702,7 @@ leaflet(smoker_data) %>%
   )
 ```
 
-The population-adjusted distribution of smoker cases shows partial geographic overlap with LC incidence (Figure 3.2.5B), particularly in the coastal corridor and central inland zone. However, the correspondence is imperfect — consistent with the Moran's I stratified analysis, which showed no significant spatial autocorrelation among smokers or non-smokers when examined separately. Together, these findings suggest that smoking shapes the overall geographic distribution of LC cases but does not fully explain it at the local level.
+The population-adjusted distribution of smoker cases shows partial geographic overlap with LC incidence (*@fig-kde-maps*), particularly in the coastal corridor and central inland zone. However, the correspondence is imperfect — consistent with the Moran's I stratified analysis, which showed no significant spatial autocorrelation among smokers or non-smokers when examined separately. Together, these findings suggest that smoking shapes the overall geographic distribution of LC cases but does not fully explain it at the local level.
 
 ```{r}
 #| label: tbl-ethnicity-smoking
@@ -780,7 +782,8 @@ Finally, individual-level environmental exposure data were not available, preven
 
 Future investigations combining population-based cancer registry data, individual-level exposure measurements, and larger molecularly characterized cohorts would be needed to address these limitations and draw causal conclusions.
 
-## Conclusions
+Conclusions
+===========
 
 This analysis demonstrates that apparent geographic clustering of LC cases in Northern Israel, when subjected to rigorous spatial analysis, is explained by the uneven distribution of smoking prevalence and population size across localities rather than by independent
 environmental or structural risk factors. Global Moran's I showed no significant spatial autocorrelation (I = −0.008, p = 0.373), and LISA identified only three Low–High outliers — no true hotspots. Stratified analysis confirmed smoking as the primary spatial confounder.
@@ -790,4 +793,4 @@ At the molecular level, the cohort mirrors internationally reported patterns: AC
 The principal methodological contribution of this work is the demonstration that sequential adjustment — for population denominators, referral bias, and behavioral confounders — can overturn superficially compelling geographic patterns. This principle applies broadly in
 spatial epidemiology and is of particular relevance in hospital-based studies with limited catchment area coverage.
 
-Future works should prioritize population-based cohort designs, individual-level environmental exposure measurements, and extended molecular datasets to enable formal assessment of gene-environment interactions in lung carcinogenesis.
+Future work should prioritize population-based cohort designs, individual-level environmental exposure measurements, and extended molecular datasets to enable formal assessment of gene-environment interactions in lung carcinogenesis.
