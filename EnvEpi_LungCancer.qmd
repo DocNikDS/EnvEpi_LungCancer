@@ -17,7 +17,7 @@ format:
     number-sections: true
     theme: cosmo
 execute:
-  echo: true
+  echo: false
   warning: false
   message: false
 engine: knitr
@@ -27,189 +27,767 @@ engine: knitr
 
 ---
 
-# Part I. Introduction
+Introduction
+============
 
-***Lung cancer (LC)*** remains the leading cause of cancer mortality worldwide, driven by a combination of genetic susceptibility, environmental exposures, and behavioural risk factors — most prominently tobacco smoking.
+This report presents a hospital-based epidemiological analysis of lung cancer (LC) cases managed at the Lady Davis Carmel Medical Center, Haifa, Israel (2024–2025). The dataset was compiled through systematic review of anonymized electronic medical records extracted from the Ofek intra/interhospital medical informatics platform, covering 94 LC cases with complete histopathological and molecular characterization.
 
-This work pursues two complementary aims: 
+Two complementary objectives guided the analysis: 
 
-1) to characterize the spatial distribution of LC cases across the Haifa District and Northern District of Israel and evaluate whether observed geographic clustering is explained by established confounders — particularly smoking prevalence and population demographics
+1) to characterize the spatial distribution of LC cases across the Haifa District and Northern District and evaluate whether observed geographic patterns are explained by established confounders — particularly smoking prevalence and population size
 
-2) to describe the molecular and histopathological profile of the study cohort and examine how biomarker patterns align with internationally reported data
+2) to describe the molecular and histopathological profile of the cohort and examine how biomarker distributions align with internationally reported data
 
-The study draws on a self-compiled, anonymized dataset of 94 LC cases managed at the Lady Davis Carmel Medical Center, Haifa (2024–2025), integrated with ambient air quality monitoring data from the Israeli Ministry of Environmental Protection. Although the dataset's scale precludes definitive conclusions about gene-environment interactions, the work demonstrates an integrative methodological framework — combining spatial epidemiology with clinical-molecular characterization — that may serve as a template for future larger-scale investigations.
+Methods
+=======
 
-Textual and tabular presentations follow the Publication Manual of the American Psychological Association (APA, 7th ed., 2020).
+The dataset comprised 94 anonymized LC cases extracted from the Ofek platform. After loading, variables were recoded as factors with descriptive labels to facilitate analysis and visualization. All analyses were performed in R programming language. The report was authored in Quarto to ensure full reproducibility.
 
-# Part II. Literature review
-
-## Chapter 2.1. LC burden in Israel
-
-***LC*** continues to be the leading cause of cancer-related mortality worldwide, accounting for roughly 1.8 million deaths per year — nearly 18% of all cancer deaths (GBD 2021 HAP Collaborators, 2025). The global age-standardized incidence rate (ASIR) stands at 30.5 per 100,000, with men showing significantly higher rates (43.4 per 100,000) compared to women (17.6 per 100,000).
-
-In Israel, the ASIR for LC in 2023 was estimated at 22.4 per 100,000. Men exhibited an incidence rate of 31.2 per 100,000, while women showed 13.6 per 100,000. Incidence among men is declining due to reductions in smoking prevalence, whereas incidence among women is rising. LC ranks as the third most common cancer among Israeli men and the fourth among women (George et al., 2025).
-
-In Israel, the ASIR for LC in 2023 was estimated at 22.4 per 100,000, lower than the global average but higher than in some developed countries such as Sweden and Finland (George et al., 2025). Men in Israel exhibited an incidence rate of 31.2 per 100,000, while women showed 13.6 per 100,000. The trends in Israel are also gender-specific: incidence among men is declining, largely due to reductions in smoking prevalence, whereas incidence among women is rising, following patterns observed in other Western countries. LC ranks as the third most common cancer among Israeli men and the fourth among women (Israel Ministry of Health Cancer Registry, 2024, cited in George et al., 2025).
-
-Mortality patterns reflect these incidence trends. Globally, LC mortality rate is around 18 per 100,000, whereas Israel reports a slightly lower rate of approximately 15.6 per 100,000. Despite being below the global average, LC remains one of the leading causes of cancer death in Israel, particularly among individuals over the age of 60. Disability-adjusted life years (DALYs) lost due to LC in Israel are still substantial, underscoring the disease’s heavy societal impact (George et al., 2025).
-
-Risk factors for LC in Israel align with global patterns but also show local nuances. Tobacco smoking remains the predominant cause, implicated in an estimated 85% of cases. However, urban air pollution—especially in densely populated areas like Tel Aviv and Haifa—and occupational exposures such as asbestos also play significant roles. Furthermore, disparities exist across population groups: Arab Israeli populations face disproportionately higher incidence and mortality rates, often due to delayed diagnoses and reduced access to screening services (GBD 2021 HAP Collaborators, 2025).
-
-Looking ahead, projections suggest a modest increase in LC burden among Israeli women, linked to historical smoking behaviours and delayed engagement with preventive health services. Globally, although incidence in men is decreasing, the overall burden is shifting toward low- and middle-income countries. Israel as a high-income but geographically diverse nation with urban air quality challenges may experience similar shifts if environmental risks are not mitigated (George et al., 2025).
-
-The comparative figures for incidence, mortality, gender-specific trends, risk factors, and screening coverage in Israel versus the global burden are summarized in *Table 2.1.1*.
+*Table 1* summarizes all variables included in the dataset. The variables are described according to a syntactical approach, primarily distinguishing only between numeric and character. Under this approach, the functional role of a variable (continuous, discrete count, binary flag, or categorical) is determined by
+its analytical use rather than by its storage type.
 
 ```{r}
-#| label: tbl-2-1-1
-#| tbl-cap: "Comparative burden of lung cancer in Israel and worldwide, 2023–2025"
+#| label: tbl-dictionary
+#| tbl-cap: "Data dictionary: variables included in the dataset."
 
+dict <- tibble::tribble(
+  ~Variable,  ~Type,  ~Description,
+  "id", "numeric, nominal", "Anonymized case identifier (not used in analysis)",
+  "sex", "numeric, binary", "Biological sex: 0 = Male, 1 = Female",
+  "age", "numeric, continuous", "Age at the lung biopsy/surgery date (years)",
+  "ethnic", "numeric, nominal", "Ethnic origin (presumed on the patient's name/surname and locality): 0 = Jewish, 1 = Arab, not otherwise specified (NOS), 2 = Arab, Druze, 3 = Arab, Bedouin",
+  "locality", "character, nominal", "Residential locality (city, town, or village)",
+  "latitude", "numeric, continuous",  "Locality geographic latitude (decimal degrees)",
+  "longitude", "numeric, continuous", "Locality geographic longitude (decimal degrees)",
+  "loc_popul", "numeric, continuous", "Locality population size (Israeli Central Bureau of Statistics, 2023)",
+  "district", "numeric, binary",  "Israeli administrative district: 0 = Haifa District, 1 = Northern District",
+  "smoking",  "numeric, binary",  "Smoking status: 0 = Non-smoker (never smoked or quit > 10 years before the lung biopsy/surgery date), 1 = Smoker (current smoker or quit ≤ 10 years before the lung biopsy/surgery date)",
+  "bx_date",  "numeric, continuous",  "The lung biopsy/surgery date",
+  "dx", "numeric, nominal", "Histological diagnosis, the LC subtype: 0 = adenocarcinoma (ACA), NOS, 1 = Mucinous ACA, 2 = Squamous cell carcinoma (SCC), 3 = neuroendocrine tumor (NET): low-grade (typical carcinoid) or intermediate-grade (atypical carcinoid) neuroendocrine neoplasm, 4 = neuroendocrine carcinoma (NEC): high-grade neuroendocrine neoplasm (small cell or large cell carcinoma)",
+  "pdl1", "numeric, binary",  "PD-L1 expression measured by tumor proportion score (TPS) - the percentage of viable tumor cells expressing PD-L1 on their surface: 0 = Weak (TPS 1–49%), 1 = Strong (TPS ≥ 50%)",
+  "met", "numeric, binary", "MET gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "egfr", "numeric, binary", "EGFR gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "braf", "numeric, binary", "BRAF gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "kras", "numeric, binary", "KRAS gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "erbb2", "numeric, binary", "ERBB2 (HER2) gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "alk", "numeric, binary", "ALK gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "ros1", "numeric, binary", "ROS1 gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "ntrk", "numeric, binary", "NTRK1/NTRK2/NTRK3 gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "ret", "numeric, binary", "RET gene mutation status: 0 = no mutation, 1 = mutation detected",
+  "msi", "numeric, ordinal", "Microsatellite instability (MSI) status of the tumor - instability of short tandem DNA repeats (microsatellites) of the tumor cells as a result of abnormal function of ≥ 1 mismatch repair genes (MLH1, PMS2, MSH2, and MSH6): 0 = microsatellite stable (MSS), 1 = low microsatellite instability (MSI-L), 2 = high microsatellite instability (MSI-H)",
+  "tmb", "numeric, continuous", "Tumor mutational burden (TMB) - number of non-inherited mutations per million tumor DNA bases"
+)
+
+dict %>%
+  kable(col.names = c("Variable", "Type", "Description / Coding")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),
+                full_width = TRUE, font_size = 13) %>%
+  column_spec(1, bold = TRUE, width = "8em") %>%
+  column_spec(2, width = "8em") %>%
+  column_spec(3, width = "40em")
+```
+
+
+Data analysis
+=============
+
+The dataset comprised 94 anonymized LC cases extracted from the Ofek platform. After loading, variables were recoded as factors with descriptive labels to facilitate analysis and visualization.
+
+```{r}
+#| label: setup
+#| echo: false
+
+library(readxl)
+library(dplyr)
 library(knitr)
 library(kableExtra)
+```
 
-tbl_2_1_1 <- data.frame(
-  Metric = c(
-    "Incidence (ASIR), per 100,000",
-    "Mortality, per 100,000",
-    "Gender trend",
-    "Top risk factors",
-    "Screening program",
-    "Mortality rank (among cancers)"
+```{r}
+#| label: data-loading
+
+df <- read_excel("data/CarmelMC_LungCancer.xlsx")
+
+glimpse(df)
+```
+
+```{r}
+#| label: preprocessing
+
+df <- df |>
+  mutate(
+    sex      = factor(sex,      levels = c(0,1), 
+                      labels = c("Male","Female")),
+    ethnic   = factor(ethnic,   levels = c(0,1,2,3), 
+                      labels = c("Jewish","Arab","Druze","Bedouin")),
+    district = factor(district, levels = c(0,1), 
+                      labels = c("Haifa","Northern")),
+    smoking  = factor(smoking,  levels = c(0,1), 
+                      labels = c("Non-smoker","Smoker")),
+    dx       = factor(dx, levels = c(0,1,2,3,4),
+                      labels = c("ACA","MucACA","SCC","NET","NEC")),
+    msi      = factor(msi, levels = c(0,1,2),
+                      labels = c("MSS","MSI-L","MSI-H"))
+  )
+
+glimpse(df)
+```
+
+Cohort demographics
+-------------------
+
+The study cohort comprised 94 LC patients with a median age of 72 years (range: 42–91). The sex distribution was male-predominant (55.3% males, 44.7% females). Smoking status was nearly balanced: 51.1% non-smokers and 48.9% smokers. Geographically, 39.4% of patients resided in the Haifa District and 60.6% in the Northern District. The ethnic composition was predominantly Jewish (68.1%), followed by Arab (25.5%), Druze (5.3%), and Bedouin (1.1%). Full demographic characteristics are presented in *@tbl-demographics* and *@fig-demographics*.
+
+```{r}
+#| label: tbl-demographics
+#| tbl-cap: "Demographic characteristics of the study cohort"
+
+tbl_demo <- data.frame(
+  Variable = c(
+    "Total patients", "Age, years: median (range)",
+    "Sex", "", "Smoking", "", "District", "",
+    "Ethnicity", "", "", "", "Histology", "", "", ""
   ),
-  Israel = c(
-    "22.4 (men: 31.2; women: 13.6)",
-    "15.6",
-    "↓ men, ↑ women",
-    "smoking, air pollution, late screening",
-    "limited",
-    "#1 in men, #2–3 in women"
+  Subgroup = c(
+    "", "",
+    "Female", "Male",
+    "Non-smoker", "Smoker",
+    "Haifa", "Northern",
+    "Jewish", "Arab", "Druze", "Bedouin",
+    "ACA", "SCC", "MucACA", "NEC"
   ),
-  Global = c(
-    "30.5 (men: 43.4; women: 17.6)",
-    "~18",
-    "↓ men, ↑ women",
-    "smoking, occupational exposure, air pollution",
-    "expanding in high-income countries",
-    "#1 globally"
+  N = c(
+    94, "72 (42–91)",
+    sum(df$sex == "Female", na.rm=TRUE),
+    sum(df$sex == "Male", na.rm=TRUE),
+    sum(df$smoking == "Non-smoker", na.rm=TRUE),
+    sum(df$smoking == "Smoker", na.rm=TRUE),
+    sum(df$district == "Haifa", na.rm=TRUE),
+    sum(df$district == "Northern", na.rm=TRUE),
+    sum(df$ethnic == "Jewish", na.rm=TRUE),
+    sum(df$ethnic == "Arab", na.rm=TRUE),
+    sum(df$ethnic == "Druze", na.rm=TRUE),
+    sum(df$ethnic == "Bedouin", na.rm=TRUE),
+    sum(df$dx == "ACA", na.rm=TRUE),
+    sum(df$dx == "SCC", na.rm=TRUE),
+    sum(df$dx == "MucACA", na.rm=TRUE),
+    sum(df$dx == "NEC", na.rm=TRUE)
+  ),
+  Pct = c(
+    "100%", "—",
+    paste0(round(mean(df$sex=="Female",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$sex=="Male",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$smoking=="Non-smoker",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$smoking=="Smoker",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$district=="Haifa",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$district=="Northern",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$ethnic=="Jewish",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$ethnic=="Arab",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$ethnic=="Druze",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$ethnic=="Bedouin",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$dx=="ACA",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$dx=="SCC",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$dx=="MucACA",na.rm=TRUE)*100,1),"%"),
+    paste0(round(mean(df$dx=="NEC",na.rm=TRUE)*100,1),"%")
   )
 )
 
-kable(tbl_2_1_1, 
-      col.names = c("Metric", "Israel", "Global"),
-      align = c("l", "l", "l")) |>
-  kable_styling(bootstrap_options = c("striped", "bordered"),
-                full_width = TRUE)
+kable(tbl_demo,
+      col.names = c("Variable", "Subgroup", "N", "%"),
+      align = c("l","l","c","c")) |>
+  kable_styling(bootstrap_options = c("striped","bordered"),
+                full_width = FALSE)
 ```
 
-Research in Israel has placed particular emphasis on Haifa and its surrounding bay area, which is the country’s most industrialized and heavily polluted region. Several studies have consistently reported elevated cancer risks, including LC, among local populations.
+```{r}
+#| label: fig-demographics
+#| fig-cap: "Sex, smoking status, district of residence, and ethnic distribution of the study cohort"
+#| fig-width: 8
+#| fig-height: 6
 
-More than a decade ago, population-based cancer registry data have demonstrated that residents of Haifa Bay experience higher rates of organ-specific cancers, including LC, compared with the rest of Israel. A complementary investigation on chronic exposure to heavy metals and industrial pollutants linked to the petrochemical industry in Haifa also found elevated lung cancer cases in the area (Blaurock-Busch et al., 2015).
+library(ggplot2)
+library(patchwork)
 
-More recent epidemiological research using registry-based cohorts confirmed that long-term residence near the Haifa industrial complex was associated with a significantly increased risk of several cancers, with LC among the most prominent (Kayyal-Tarabeia et al., 2023). Environmental exposure studies that examined adolescents exposed to industrial air pollution in Haifa Bay further showed a strong association between early-life pollution exposure and increased risk of LC in young adulthood (Lev Bar-Or et al., 2023).
+# Individual plots
+p_sex <- ggplot(df, aes(x = sex, fill = sex)) +
+  geom_bar() +
+  labs(title = "Sex", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-Spatial analyses support these findings. A study applying kernel density functions demonstrated a geographical overlap between lung cancer cases and sulfur dioxide pollution in the Haifa metropolitan area, highlighting a strong environmental component (Portnov et al., 2009). Another spatial analysis of cancer incidence rates found clustering of lung cancer and other cancers in areas with higher levels of industrial emissions in Haifa Bay (Eitan et al., 2010).
+p_smoking <- ggplot(df, aes(x = smoking, fill = smoking)) +
+  geom_bar() +
+  labs(title = "Smoking", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-At the clinical level, molecular epidemiology works also reported that patients with lower integrated DNA repair capacity scores were at greater risk of LC, underlining the interplay between environmental exposures and genetic susceptibility.
+p_district <- ggplot(df, aes(x = district, fill = district)) +
+  geom_bar() +
+  labs(title = "District", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-Together, these studies indicate that the Haifa Bay area constitutes a high-risk region for LC in Israel, due to the combined effects of industrial air pollution, environmental exposures, and individual biological vulnerabilities.
+p_ethnic <- ggplot(df, aes(x = ethnic, fill = ethnic)) +
+  geom_bar() +
+  labs(title = "Ethnicity", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-Chapter 2.2. Role of genetic markers in LC
-------------------------------------------
+(p_sex | p_smoking) / (p_district | p_ethnic)
+```
 
-LC management has become increasingly dependent on molecular characterization, with several biomarkers guiding prognosis and therapy. Their alterations not only shape tumor biology but also determine prognosis and therapeutic decision-making in precision oncology. Below, key LC markers are discussed in some detail.
+Histological subtypes, biomarker distribution, and TMB
+------------------------------------------------------
 
-### Programmed death-ligand 1 (PD-L1)
+ACA was the predominant histological subtype, accounting for 67.0% of cases, followed by SCC (26.6%), MucACA (4.3%), and NEC (2.1%). No carcinoid tumors (NETs) were identified in this cohort.
 
-***PD-L1*** is a cell-cycle checkpoint molecule expressed on tumor cells, enabling evasion from cytotoxic T-cell response. It is a predictive biomarker for response to immune checkpoint inhibitors used against LC, particularly pembrolizumab and nivolumab (Tuminello et al., 2020). PD-L1 expression is measured by ***tumor proportion score (TPS)*** - the percentage of viable tumor cells that express PD-L1 on their surface.
+Biomarker positivity was concentrated in ACA: EGFR, BRAF, and ROS1 alterations occurred exclusively in ACAs, while KRAS and PD-L1 positivity were also predominantly found in this subtype. SCC cases showed lower rates of PD-L1 (25.0%) and KRAS (8.7%) positivity. 
 
-### Mesenchymal–epithelial transition proto-oncogene (MET)
+Mean TMB differed across histological subtypes, ranging from 6.7 mutations/Mb in ACA to 16.1 mutations/Mb in NEC — consistent with the known hypermutated phenotype of the latter. 
 
-MET alterations in LC typically arise via gene amplification or exon 14 skipping mutations, which deregulate receptor degradation and promote sustained MET signalling. In resected non-small cell lung cancer (NSCLC), MET overexpression or increased copy number correlate with worse prognosis and aggressive tumor phenotype (Finocchiaro et al., 2015). In advanced disease, patients harboring MET exon 14 skipping mutations have historically had poor outcomes without targeted therapy; however, selective MET inhibitors have shown improved survival in MET-dysregulated NSCLC (Santarpia et al., 2021). The adoption of MET inhibitors has made MET a clinically actionable driver in a subset of LCs.
+Biomarker distribution and mean TMB by histological subtype are shown in *@fig-biomarkers*.
 
-### Epidermal growth factor receptor (EGFR)
+```{r}
+#| label: fig-biomarkers
+#| fig-cap: "Histological diagnoses with biomarker distribution and mean tumor mutational burden"
+#| fig-width: 10
+#| fig-height: 6
 
-EGFR activating mutations (e.g. exon 19 deletions, L858R) drive oncogenic signalling via MAPK/PI3K pathways and are among the earliest clinically targetable markers in LC. EGFR mutant NSCLC treated with EGFR tyrosine kinase inhibitors tend to have substantially improved progression-free survival compared to chemotherapy (Su et al., 2025). Patients with EGFR mutations tend to have longer survival if managed with appropriate targeted therapy. EGFR status is also used to exclude or stratify patients for immunotherapy, as EGFR-mutated tumors may respond less favorably to checkpoint inhibitors.
+library(tidyr)
 
-### B-Raf proto-oncogene (BRAF)
+# Biomarkers included
+biomarkers <- c("pdl1","egfr","kras","braf","met",
+                "alk","ros1","erbb2","ntrk","ret")
 
-BRAF mutations (notably V600E) are less common in LC but represent a distinct actionable driver. BRAF V600E mutation activates the MAPK pathway independently of upstream signalling. Use of BRAF and MEK inhibitors (e.g., dabrafenib + trametinib) has been approved in NSCLC harboring BRAF V600E, improving response rates over standard therapy (Farago & Azzoli, 2017). 
+# For each biomarker: distribution of positive cases across Dx groups
+bm_dist <- df |>
+  select(dx, all_of(biomarkers)) |>
+  pivot_longer(cols = all_of(biomarkers), 
+               names_to = "biomarker", 
+               values_to = "value") |>
+  filter(value == 1) |>
+  group_by(biomarker, dx) |>
+  summarise(n = n(), .groups = "drop") |>
+  group_by(biomarker) |>
+  mutate(pct = n / sum(n) * 100)
 
-In prognosis, BRAF mutations do not yet have robust independent prognostic value beyond their predictive role for targeted therapy, though they mark a subset of tumors with distinct biology and possible resistance patterns.
+# Mean TMB per Dx
+tmb_mean <- df |>
+  group_by(dx) |>
+  summarise(mean_tmb = round(mean(tmb, na.rm=TRUE), 1))
 
-### Kirsten rat sarcoma (KRAS)
+# Plot 1 — biomarker distribution
+p_bm <- ggplot(bm_dist, aes(x = biomarker, y = pct, fill = dx)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Biomarker distribution across histological subtypes",
+       x = "Biomarker", y = "% of positive cases", fill = "Histology") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-KRAS mutations are among the most frequent driver alterations in lung adenocarcinoma (ACA) and activate downstream RAF/MEK/ERK signalling independent of receptor input. Historically, KRAS mutations have been associated with poorer prognosis and limited targeted therapy options, although the emergence of KRAS G12C inhibitors is changing the paradigm. In NSCLC, KRAS-mutant tumors often co-occur with resistance pathways (e.g., MET) (Garcia-Robledo et al., 2022). Recent clinical trials of KRAS G12C inhibitors (e.g., sotorasib, adagrasib) show meaningful responses and are shaping new standards in KRAS-driven LC.
+# Plot 2 — mean TMB per Dx
+p_tmb <- ggplot(tmb_mean, aes(x = dx, y = mean_tmb, fill = dx)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = mean_tmb), vjust = -0.5, size = 3.5) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(title = "Mean TMB by histological subtype",
+       x = "Histology", y = "Mean TMB (mut/Mb)") +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-### Erythroblastic oncogene B 2 (ERBB2) / human epidermal growth factor receptor 2 (HER2)
+p_bm / p_tmb
+```
 
-ERBB2 (HER2) alterations in LC include mutations, amplification, or overexpression, often mutually exclusive of other drivers. ERBB2 (HER2) mutations are relatively rare (~ 1–4 % of NSCLC) but are enriched in lung ACA and may respond to HER2-targeted agents (e.g., trastuzumab deruxtecan) (Ren et al., 2022). The prognostic significance of HER2 alterations is somewhat ambiguous: while HER2 amplification is sometimes linked to more aggressive features (e.g. larger tumor size, pleural invasion), the value of HER2 status as a pure prognostic marker is less established (Ferrari et al., 2024). Clinically, HER2-positive tumors are a subset considered for experimental HER2-directed therapy trials in NSCLC.
+Geographic distribution of LC cases
+-----------------------------------
 
-### Anaplastic lymphoma kinase (ALK)
+Cases were distributed across more than 40 localities within the Haifa District
+and Northern District. The largest concentration resided in the city of Haifa
+(18.1% of the cohort), followed by Acre (6.4%), Kiryat Ata (6.4%), and Nazareth (4.3%). The remaining cases were dispersed across smaller towns and villages, each contributing ≤3.2% of the total (*@fig-locality-bar*).
 
-ALK rearrangements (e.g., EML4-ALK fusion) produce constitutively active fusion kinases promoting proliferation and survival via downstream PI3K/AKT and RAS/MAPK pathways. ALK-positive NSCLC tends to occur in younger, non-smoking patients and is typically associated with favorable response to ALK inhibitors (e.g. crizotinib, alectinib, lorlatinib). The presence of ALK rearrangement is thus both prognostic in the sense of predicting effective targeted therapy and predictive of favorable benefit from ALK inhibition.
+Histopathological composition varied between localities. Haifa cases were predominantly ACA (64.7%) with a substantial SCC fraction (35.3%). Acre cases split evenly between ACA and SCC, while Nazareth showed a more mixed profile including ACA, SCC, and NEC.
 
-### C-ros oncogene 1 (ROS1)
+The bubble map (*@fig-bubble-map*) provides a geographic overview of absolute case counts. The city of Haifa emerges as the dominant cluster, with additional concentrations along the coastal plain (Acre, Nahariyya, Kiryat Ata) and in inland centers (Nazareth, Nof HaGalil, Afula). However, absolute case counts reflect both underlying disease risk and population size — larger cities generate more cases simply because more people live there. Population adjustment, applied in the subsequent spatial analyses, is therefore essential before interpreting geographic patterns as evidence of differential risk.
 
-ROS1 gene fusions (e.g., CD74-ROS1) produce constitutively active tyrosine kinase signalling analogous to ALK, though representing a smaller fraction (~ 1–2 %) of NSCLC. ROS1 fusion–positive patients show strong and durable responses to ROS1 inhibitors (e.g., crizotinib, entrectinib, lorlatinib) compared to conventional chemo. The ROS1-positive group may also have a generally favorable prognosis when treated with targeted agents because of high sensitivity to these therapies. ROS1 testing is standard in driver panels in NSCLC (Mesquita et al., 2025).
+```{r}
+#| label: fig-locality-bar
+#| fig-cap: "Geographic distribution of LC patients by locality of residence. 'Other' bars represent localities with a single case each, grouped by histological subtype."
+#| fig-width: 9
+#| fig-height: 10
 
-### Neurotrophic tyrosine receptor kinases (NTRK)
+major <- df |>
+  group_by(locality) |>
+  mutate(loc_total = n()) |>
+  ungroup() |>
+  filter(loc_total >= 2)
 
-NTRK fusions (gene rearrangements involving NTRK1, NTRK2, NTRK3) lead to ligand-independent activation of tropomyosin receptor kinase (TRK) signalling, driving oncogenesis. Although rare in LC, NTRK fusions are high-priority actionable alterations, as TRK inhibitors (e.g., entrectinib, larotrectinib) demonstrate high response rates independent of tumor histology. The presence of NTRK fusion tends to predict dramatic responses to these inhibitors, although prognostic value beyond therapeutic sensitivity is less well defined (Doebele et al., 2019). These alterations are therefore of great interest in precision oncology even in low-prevalence settings.
+minor <- df |>
+  group_by(locality) |>
+  mutate(loc_total = n()) |>
+  ungroup() |>
+  filter(loc_total == 1) |>
+  mutate(locality = paste0("Other (", dx, ")"))
 
-### Rearranged during transfection (RET)
+df_plot <- bind_rows(major, minor) |>
+  group_by(locality, dx) |>
+  summarise(n = n(), .groups = "drop") |>
+  group_by(locality) |>
+  mutate(loc_total = sum(n)) |>
+  ungroup()
 
-RET gene fusions (e.g., KIF5B-RET, CCDC6-RET) activate downstream intracellular signalling and are present in ~ 1–2 % of NSCLC. RET fusion–positive patients derive benefit from selective RET inhibitors (e.g., selpercatinib, pralsetinib), which have shown improvements in response rate and progression-free survival. RET fusions have prognostic implications insofar as patients receiving targeted RET inhibition fare better compared to non-targeted therapy, but their baseline prognosis prior to therapy is not as clearly established (Andrini et al., 2022).
+others <- df_plot |> filter(startsWith(locality, "Other"))
+named  <- df_plot |> filter(!startsWith(locality, "Other"))
 
-### Mismatch repair (MMR)
+named_levels  <- named |> 
+  distinct(locality) |> 
+  arrange(locality) |> 
+  pull(locality)
+other_levels  <- others |> 
+  distinct(locality) |> 
+  arrange(locality) |> 
+  pull(locality)
 
-MMR genes (MLH1, PMS2, MSH2, MSH6) are pivotal for correcting base–base mismatches and small insertion/deletion loops during DNA replication; the deficiency leads to microsatellite instability (MSI) and accumulation of mutations. In LC, MSI is relatively uncommon, but when present, high mutation burden may sensitize tumors to immune checkpoint blockade. Deficient MMR status confers a higher neoantigen load, which may predict more durable response to PD-1/PD-L1 inhibitors. Although its independent prognostic significance in LC is less clearly defined due to low prevalence, MMR deficiency is a predictive biomarker for immunotherapy responsiveness in multiple tumor types and increasingly explored in LC settings (Le et al., 2017).
+all_levels <- c(rev(other_levels), rev(named_levels))
 
-Chapter 2.3. Role of air pollution in LC
-----------------------------------------
+df_plot <- df_plot |>
+  mutate(locality = factor(locality, levels = all_levels))
 
-While the previous section addressed the role of molecular and genetic alterations in shaping LC prognosis and treatment, it is equally crucial to recognize the environmental exposures that initiate and promote malignant transformation. Among these, ambient air pollution stands out as a major public health concern and a well-established carcinogenic agent (classified as Group 1 by IARC). Air pollutants represent a complex mixture of toxicants capable of inducing DNA damage, oxidative stress, and chronic inflammation, thereby complementing and interacting with the genetic susceptibilities described earlier. From a toxicological and epidemiological perspective, several pollutants — including nitrogen oxides (NOx, including NO₂), carbon monoxide (CO), sulfur dioxide (SO₂), ozone (O₃), and so-called particulate matter (PM₁₀ and PM₂.₅)—have been most consistently linked with LC incidence and mortality. The following subsections summarize current evidence regarding their relevance.
+ggplot(df_plot, aes(x = locality, y = n, fill = dx)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = NULL, y = "Number of cases", fill = "Histology") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 9))
+```
 
-### Nitrogen dioxide (NO₂)
+```{r}
+#| label: fig-bubble-map
+#| fig-cap: "Interactive bubble map of LC cases across Northern Israel by locality of residence. Bubble size corresponds to number of cases. Click to interact."
 
-***NO₂***, mainly from combustion (traffic, power plants), is frequently used as a proxy of traffic-related air pollution. Higher NO₂ exposure is significantly associated with increased LC incidence (Yoon et al., 2024). A meta-analysis of long-term air pollution and LC also reported a positive association between residential NO₂ levels and LC risk and mortality (Chen et al., 2024). 
+library(leaflet)
 
-NO₂ and its reactive nitrogen derivatives may generate oxidative stress, DNA damage, and promote inflammation in lung tissue, contributing to carcinogenesis. The consistent epidemiologic signal across settings makes NO₂ one of the more robust non-particulate pollutants in LC studies.
+# Aggregating cases by locality
+locality_counts <- df |>
+  group_by(locality, latitude, longitude) |>
+  summarise(n = n(), .groups = "drop")
 
-### Other NO~x~ 
+# Creating interactive map
+leaflet(locality_counts) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  setView(lng = 35.1, lat = 32.8, zoom = 8) |>
+  addCircleMarkers(
+    lng = ~longitude,
+    lat = ~latitude,
+    radius = ~sqrt(n) * 4,
+    color = "steelblue",
+    fillColor = "steelblue",
+    fillOpacity = 0.6,
+    stroke = TRUE,
+    weight = 1,
+    popup = ~paste0(
+      "<b>", locality, "</b><br>",
+      "Cases: ", n
+    ),
+    label = ~locality
+  ) |>
+  addLegend(
+    position = "bottomright",
+    colors = "steelblue",
+    labels = "LC cases",
+    title = "Cases (n)"
+  )
+```
 
-***NO~x~*** refers to nitrogen oxides generally (including NO and NO₂). Most epidemiological studies do not separate NO from NO₂, so the evidence is dominated by NO₂. However, ***NO~x~*** may capture additional sources (e.g., industrial emissions) and serve as an upstream precursors to secondary pollutants (ozone, nitrates, etc.). Some pooled pollution analyses include ***NO~x~*** as an exposure metric correlated with LC outcomes, though the effect estimates are typically weaker or less precisely estimated than for NO₂. 
-### Carbon monoxide (CO) 
+Spatial analysis
+----------------
 
-CO arises from incomplete combustion (vehicles, heating). The direct epidemiological linkage between CO and LC is relatively sparse in recent years. Some general air-pollution reviews note CO as one of the ambient pollutants monitored for lung function effects, but seldom as an independent LC risk factor (Meo et al., 2024).
+### Kernel density estimation (KDE)
 
-CO has less direct carcinogenic potential compared to oxidants; its toxicity is more classically associated with interference in oxygen delivery. In LC etiologic models, ***CO*** is more of a co-pollutant (***covariate***) than a primary suspect.
+To explore geographic heterogeneity beyond absolute counts, KDE was applied in two forms: unadjusted (weighted by absolute case counts) and population-adjusted (weighted by cases per  100,000 locality population). The two maps are shown in *@fig-kde-maps*.
 
-### Sulfur dioxide (SO₂)
+The unadjusted map confirms Haifa's dominance — a pattern driven largely by its large population rather than elevated relative risk. After population adjustment, Haifa's prominence diminishes substantially. Instead, small inland localities emerge with elevated relative intensity, most notably Elkosh (1 case in a population of 267, yielding 374.5 per 100,000). The adjusted map thus provides a more valid basis for assessing spatial risk gradients than raw case counts alone.
 
-SO₂ is primarily produced from fossil fuel combustion, especially of sulfur-containing coal and fuel oil. In a recent large scale study, SO₂ exposure was positively associated with LC incidence (and kidney cancer), even after adjustment for other pollutants (Diver et al., 2023). 
+### Global spatial autocorrelation
 
-In some ecological/temporal analyses, SO₂ ranked second after NO₂ in its association strength with LC incidence and mortality (Wang et al., 2022). 
-The pathogenetic role of SO₂ involves irritation, chronic inflammation, and generation of reactive sulfur species in the lung microenvironment. However, the epidemiologic evidence is less consistent and effect sizes tend to be smaller than for PM₂.₅ or NO₂.
+Global spatial autocorrelation was assessed using Moran's I with a k = 4 nearest-neighbor weights matrix. The result was Moran's I = −0.008 (permutation test p = 0.373), indicating no statistically significant global clustering of LC incidence across localities (*@fig-moran*). This finding is consistent with the overall conclusion that apparent geographic gradients in crude case maps are attributable to population size and confounding rather than true spatial clustering of risk.
 
-### Ozone (O₃)
+### Local indicators of spatial association
 
-***O₃*** is a secondary pollutant formed by photochemical reactions of NO~x~ and volatile organic compounds. Long-term ambient O₃ exposure was significantly associated with increased LC incidence (Wu et al., 2025). 
+LISA analysis identified three statistically significant localities (p < 0.05), all classified as Low–High outliers: Beitegen, Fassuta, and Kiryat Shmona — localities with relatively low incidence surrounded by higher-incidence neighbors (*@fig-lisa*, *@tbl-lisa*). No High–High hotspots or High–Low outliers reached statistical significance, corroborating the global Moran's I result.
 
-While the biological impact is plausible (oxidative stress, epithelial injury), O₃ associations in LC remain relatively newer and require confirmation across populations.
+```{r}
+#| label: fig-kde-maps
+#| fig-cap: "Kernel density heatmaps of LC cases across Northern Israel. A: Unadjusted (absolute counts). B: Population-adjusted (relative risk intensity). Bubble size and opacity reflect case density. Click to interact."
 
-### Particulate matter with the particles diameter ≤ 10 µm (PM₁₀)
+library(leaflet)
 
-***PM₁₀*** represents coarse plus fine particles. Its epidemiological association with LC is more variable. A recent study in Italy found no significant association between historical PM₁₀ exposure (range ~ 6.3–41.9 µg/m³) and LC mortality after adjustment for major covariates. However, in some Asian cohorts (e.g. South Korea), PM₁₀ was modestly associated with lung ACA incidence in male smokers (Fedrizzi et al., 2025).
+locality_data <- df |>
+  group_by(locality, latitude, longitude, loc_popul) |>
+  summarise(n = n(), .groups = "drop") |>
+  mutate(adj_weight = n / loc_popul * 100000)
 
-Because PM₁₀ includes larger particles that deposit more proximally in airways, its etiologic potency is generally lower than PM₂.₅. When PM₂.₅ is present in multipollutant models, the independent effect of PM₁₀ diminishes.
+# Scaling functions
+scale_radius <- function(x, min_r = 10, max_r = 60) {
+  min_r + (x - min(x)) / (max(x) - min(x)) * (max_r - min_r)
+}
+scale_opacity <- function(x, min_o = 0.2, max_o = 0.7) {
+  min_o + (x - min(x)) / (max(x) - min(x)) * (max_o - min_o)
+}
 
-### Particulate matter with the particles diameter ≤ 2.5 µm (PM₂.₅) 
+# Unadjusted map
+map_unadj <- leaflet(locality_data) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  setView(lng = 35.1, lat = 32.5, zoom = 8) |>
+  addCircleMarkers(
+    lng = ~longitude,
+    lat = ~latitude,
+    radius = ~scale_radius(n),
+    fillColor = "red",
+    fillOpacity = ~scale_opacity(n),
+    stroke = FALSE,
+    popup = ~paste0("<b>", locality, "</b><br>Cases: ", n)
+  ) |>
+  addControl("<b>Unadjusted</b><br>(absolute counts)",
+             position = "topright")
 
-***PM₂.₅*** is the most strongly and consistently implicated particulate pollutant in LC epidemiology. Multiple cohort and mortality studies linked long-term exposure to PM₂.₅ with LC incidence and mortality (Cheng et al., 2024; Wang et al., 2025). 
+# Population-adjusted map
+map_adj <- leaflet(locality_data) |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  setView(lng = 35.1, lat = 32.5, zoom = 8) |>
+  addCircleMarkers(
+    lng = ~longitude,
+    lat = ~latitude,
+    radius = ~scale_radius(adj_weight),
+    fillColor = "red",
+    fillOpacity = ~scale_opacity(adj_weight),
+    stroke = FALSE,
+    popup = ~paste0("<b>", locality, "</b><br>Adjusted intensity: ", 
+                    round(adj_weight, 1))
+  ) |>
+  addControl("<b>Population-adjusted</b><br>(relative risk intensity)",
+             position = "topright")
 
-Because fine particles can reach deep alveoli and translocate inflammatory signals, PM₂.₅ is biologically more hazardous than coarser particulate matter’s fractions. The epidemiological evidence supports a dose-response shape even at low exposures, strengthening the causal inference.
+map_unadj
+map_adj
+```
 
-Part III. Data analysis
-=======================
+```{r}
+#| label: fig-moran
+#| fig-cap: "Moran scatterplot of LC incidence across Northern Israel. Each point represents a locality. Positive spatial autocorrelation is indicated by points clustering in the upper-right (high–high) and lower-left (low–low) quadrants."
+#| warning: false
+#| message: false
 
+library(spdep)
 
+# Aggregating by locality
+loc_data <- df %>%
+  group_by(locality, latitude, longitude, loc_popul) %>%
+  summarise(cases = n(), .groups = "drop") %>%
+  filter(!is.na(latitude) & !is.na(longitude) & 
+         !is.na(loc_popul) & loc_popul > 0) %>%
+  mutate(incidence = cases / loc_popul * 100000)
 
+# Spatial weights: 4 nearest neighbors
+coords <- cbind(loc_data$longitude, loc_data$latitude)
+knn4    <- knearneigh(coords, k = 4)
+nb      <- knn2nb(knn4)
+w       <- nb2listw(nb, style = "W")
+
+# Moran's I permutation test (999 simulations)
+set.seed(42)
+moran_mc <- moran.mc(loc_data$incidence, w, nsim = 999)
+
+# Standardized incidence and spatial lag for scatterplot
+inc_std <- scale(loc_data$incidence)[, 1]
+sp_lag  <- lag.listw(w, inc_std)
+
+moran_df <- data.frame(
+  inc_std  = inc_std,
+  sp_lag   = sp_lag,
+  locality = loc_data$locality
+)
+
+# Quadrant labels
+moran_df$quadrant <- case_when(
+  moran_df$inc_std >= 0 & moran_df$sp_lag >= 0 ~ "High–High",
+  moran_df$inc_std <  0 & moran_df$sp_lag <  0 ~ "Low–Low",
+  moran_df$inc_std >= 0 & moran_df$sp_lag <  0 ~ "High–Low",
+  TRUE                                          ~ "Low–High"
+)
+
+# Moran's I value and p-value for annotation
+mi_val <- round(moran_mc$statistic, 3)
+mi_p   <- round(moran_mc$p.value,   3)
+
+ggplot(moran_df, aes(x = inc_std, y = sp_lag, colour = quadrant)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_point(size = 2.5, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE,
+              colour = "black", linewidth = 0.7, linetype = "solid",
+              aes(group = 1)) +
+  scale_colour_manual(values = c(
+    "High–High" = "#d73027",
+    "Low–Low"   = "#4575b4",
+    "High–Low"  = "#fc8d59",
+    "Low–High"  = "#91bfdb"
+  )) +
+  annotate("text", x = Inf, y = Inf,
+           label = paste0("Moran's I = ", mi_val,
+                          "\np (permutation) = ", mi_p),
+           hjust = 1.1, vjust = 1.5, size = 3.5, colour = "grey30") +
+  labs(
+    x      = "Standardised incidence (deviation from mean)",
+    y      = "Spatial lag (mean of neighbours)",
+    colour = "Cluster type"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+#| label: fig-lisa
+#| fig-cap: "Local Moran's I (LISA) analysis of LC incidence across Northern Israel. Localities are classified by cluster type: hotspots (High–High), coldspots (Low–Low), high–low outliers, and low–high outliers. Only localities with p < 0.05 are highlighted; non-significant localities are shown in grey."
+#| warning: false
+#| message: false
+
+library(spdep)
+library(leaflet)
+
+# Local Moran's I
+set.seed(42)
+lisa <- localmoran_perm(loc_data$incidence, w, nsim = 999, alternative = "two.sided")
+
+loc_data$lisa_I   <- lisa[, "Ii"]
+loc_data$lisa_p   <- lisa[, "Pr(z != E(Ii))"]
+
+# Classifying quadrants (based on standardized values)
+loc_data$quadrant <- case_when(
+  inc_std >= 0 & sp_lag >= 0 & loc_data$lisa_p < 0.05 ~ "High–High (hotspot)",
+  inc_std <  0 & sp_lag <  0 & loc_data$lisa_p < 0.05 ~ "Low–Low (coldspot)",
+  inc_std >= 0 & sp_lag <  0 & loc_data$lisa_p < 0.05 ~ "High–Low outlier",
+  inc_std <  0 & sp_lag >= 0 & loc_data$lisa_p < 0.05 ~ "Low–High outlier",
+  TRUE ~ "Not significant"
+)
+
+pal_lisa <- colorFactor(
+  palette = c("#d73027", "#4575b4", "#fc8d59", "#91bfdb", "#cccccc"),
+  levels  = c("High–High (hotspot)", "Low–Low (coldspot)",
+              "High–Low outlier", "Low–High outlier", "Not significant")
+)
+
+leaflet(loc_data) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addCircleMarkers(
+    lng    = ~longitude,
+    lat    = ~latitude,
+    radius = 8,
+    color  = ~pal_lisa(quadrant),
+    fillColor  = ~pal_lisa(quadrant),
+    fillOpacity = 0.8,
+    stroke = FALSE,
+    popup  = ~paste0("<b>", locality, "</b><br>",
+                     "Incidence: ", round(incidence, 1), " per 100,000<br>",
+                     "LISA p = ", round(lisa_p, 3), "<br>",
+                     "Cluster: ", quadrant)
+  ) %>%
+  addLegend(
+    position = "topright",
+    pal      = pal_lisa,
+    values   = ~quadrant,
+    title    = "LISA cluster type"
+  )
+```
+
+LISA analysis identified three statistically significant Low–High outliers (p < 0.05): Beitegen, Fassuta, and Kiryat Shmona — localities with relatively low incidence surrounded by higher-incidence neighbours (Table 3.2.2). No High–High hotspots or High–Low outliers reached statistical significance. This absence of significant local clustering corroborates the global Moran's I result (I = −0.008, p = 0.373) and is consistent with the conclusion that apparent geographic gradients in crude case maps are attributable to population size distribution and smoking prevalence rather than true spatial clustering of risk.
+
+```{r}
+#| label: tbl-lisa
+#| tbl-cap: "Localities classified as statistically significant LISA clusters (p < 0.05). Both identified localities are Low–High outliers — low incidence surrounded by higher-incidence neighbors."
+
+lisa_sig <- loc_data %>%
+  mutate(
+    inc_std  = scale(incidence)[, 1],
+    sp_lag   = lag.listw(w, scale(incidence)[, 1]),
+    lisa_I   = lisa[, "Ii"],
+    lisa_p   = lisa[, "Pr(z != E(Ii))"],
+    quadrant = case_when(
+      inc_std >= 0 & sp_lag >= 0 & lisa_p < 0.05 ~ "High–High (hotspot)",
+      inc_std <  0 & sp_lag <  0 & lisa_p < 0.05 ~ "Low–Low (coldspot)",
+      inc_std >= 0 & sp_lag <  0 & lisa_p < 0.05 ~ "High–Low outlier",
+      inc_std <  0 & sp_lag >= 0 & lisa_p < 0.05 ~ "Low–High outlier",
+      TRUE ~ "Not significant"
+    )
+  ) %>%
+  filter(quadrant != "Not significant") %>%
+  select(locality, loc_popul, cases, incidence, lisa_I, lisa_p, quadrant) %>%
+  mutate(
+    incidence = round(incidence, 1),
+    lisa_I    = round(lisa_I, 3),
+    lisa_p    = round(lisa_p, 3)
+  )
+
+lisa_sig %>%
+  rename(
+    Locality      = locality,
+    Population    = loc_popul,
+    `Cases (n)`   = cases,
+    `Incidence (per 100,000)` = incidence,
+    `Local Moran's I` = lisa_I,
+    `p-value`     = lisa_p,
+    `Cluster type` = quadrant
+  ) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),
+                full_width = FALSE)
+```
+
+### Smoking as a confounder
+
+To evaluate whether the observed spatial patterns could be explained by smoking prevalence, the population-adjusted distribution of smoker cases was mapped (*@fig-smoking-kde*) and stratified Moran's I analyses were performed. Among smokers only, Moran's I was 0.026 (p = 0.725); among non-smokers only, Moran's I was −0.032 (p = 0.626) — neither significant. The statistically significant clustering observed in the combined unadjusted dataset thus disappeared once smoking status was accounted for, identifying smoking as a true spatial confounder rather than an independent geographic risk factor.
+
+### Ethnicity as a potential determinant
+
+The cohort comprised four ethnic groups: Jewish (68.1%), Arab (25.5%), Druze (5.3%), and Bedouin (1.1%). Smoking prevalence among Jewish and Arab cases was similar at 53.1% and 50.0%, respectively; no smokers were recorded among Druze or Bedouin cases (*@tbl-ethnicity-smoking*). Fisher's exact test comparing smoking prevalence between Jewish and Arab cases yielded p = 0.815, indicating no statistically significant difference. Druze and Bedouin cases were excluded from formal testing due to zero observed smokers in both groups.
+
+These findings indicate that ethnicity does not independently explain the geographic distribution of LC cases in this cohort. Its role is more likely indirect, mediated through residential settlement patterns and their overlap with smoking prevalence.
+
+```{r}
+#| label: fig-smoking-kde
+#| fig-cap: "Population-adjusted distribution of smoker cases across Northern Israel. Circle size and opacity reflect the proportion of smokers per locality population (per 100,000). Compare with Figure 3.2.5b to assess geographic overlap between smoking prevalence and LC incidence."
+#| warning: false
+#| message: false
+
+# Aggregating smokers by locality
+smoker_data <- df %>%
+  filter(smoking == "Smoker") %>%
+  group_by(locality, latitude, longitude, loc_popul) %>%
+  summarise(smokers = n(), .groups = "drop") %>%
+  filter(!is.na(latitude) & !is.na(longitude) &
+         !is.na(loc_popul) & loc_popul > 0) %>%
+  mutate(adj_intensity = smokers / loc_popul * 100000)
+
+scale_radius  <- function(x, min_r = 4, max_r = 30) {
+  r <- sqrt(x)
+  min_r + (max_r - min_r) * (r - min(r)) / (max(r) - min(r) + 1e-9)
+}
+scale_opacity <- function(x, min_o = 0.2, max_o = 0.8) {
+  min_o + (max_o - min_o) * (x - min(x)) / (max(x) - min(x) + 1e-9)
+}
+
+smoker_data <- smoker_data %>%
+  mutate(
+    radius  = scale_radius(adj_intensity),
+    opacity = scale_opacity(adj_intensity)
+  )
+
+leaflet(smoker_data) %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addCircleMarkers(
+    lng         = ~longitude,
+    lat         = ~latitude,
+    radius      = ~radius,
+    fillColor   = "steelblue",
+    fillOpacity = ~opacity,
+    stroke      = FALSE,
+    popup       = ~paste0("<b>", locality, "</b><br>",
+                          "Smoker cases: ", smokers, "<br>",
+                          "Adjusted intensity: ",
+                          round(adj_intensity, 1), " per 100,000")
+  ) %>%
+  addControl(
+    html     = "<b>Smoker cases</b><br>(population-adjusted)",
+    position = "topright"
+  )
+```
+
+The population-adjusted distribution of smoker cases shows partial geographic overlap with LC incidence (Figure 3.2.5B), particularly in the coastal corridor and central inland zone. However, the correspondence is imperfect — consistent with the Moran's I stratified analysis, which showed no significant spatial autocorrelation among smokers or non-smokers when examined separately. Together, these findings suggest that smoking shapes the overall geographic distribution of LC cases but does not fully explain it at the local level.
+
+```{r}
+#| label: tbl-ethnicity-smoking
+#| tbl-cap: "LC cases and smoking prevalence by ethnic group. Chi-square test of independence was applied to compare smoking prevalence between Jewish and Arab cases."
+
+library(kableExtra)
+
+ethn_smoke <- df %>%
+  group_by(ethnic) %>%
+  summarise(
+    cases    = n(),
+    smokers  = sum(smoking == "Smoker", na.rm = TRUE),
+    .groups  = "drop"
+  ) %>%
+  mutate(
+    pct_total   = round(cases / sum(cases) * 100, 1),
+    pct_smoking = round(smokers / cases * 100, 1)
+  ) %>%
+  select(ethnic, cases, pct_total, smokers, pct_smoking) %>%
+  rename(
+    "Ethnicity"                            = ethnic,
+    "Cases"                          = cases,
+    "% of total cases"                   = pct_total,
+    "Smokers"                        = smokers,
+    "% of smokers among the cases (%)" = pct_smoking
+  )
+
+ethn_smoke %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"),
+                full_width = FALSE)
+```
+
+```{r}
+#| label: chi-ethnicity-smoking
+
+# Fisher's exact test: Jewish vs Arab only (Druze/Bedouin excluded — zero smokers)
+ct <- df %>%
+  filter(ethnic %in% c("Jewish", "Arab")) %>%
+  mutate(smoking = factor(smoking)) %>%
+  select(ethnic, smoking) %>%
+  table()
+
+print(ct)
+
+fisher_result <- fisher.test(ct)
+print(fisher_result)
+```
+
+Fisher's exact test comparing smoking prevalence between Jewish and Arab cases yielded p = 0.815, indicating no statistically significant difference. Druze and Bedouin cases were excluded from formal testing due to zero observed smokers in both groups — a finding that may reflect cultural norms, small subgroup size, or referral patterns rather than true population prevalence. Together, these results suggest that ethnicity does not independently explain the geographic distribution of LC cases in this cohort; its role is more likely indirect, mediated through residential settlement patterns and their overlap with smoking prevalence.
+
+Discussion
+==========
+
+This analysis of 94 LC cases from the Lady Davis Carmel Medical Center demonstrates both the potential and the inherent limitations of hospital-based spatial epidemiology. The molecular and histopathological findings align closely with internationally reported patterns: ACA was
+the dominant subtype, EGFR and KRAS were the most frequent actionable alterations, and PD-L1 positivity was concentrated in ACAs — consistent with current global literature on non-small-cell LC molecular profiling.
+
+The spatial analyses tell a methodologically instructive story. Crude case mapping initially suggested geographic clustering centered on the city of Haifa and coastal urban centers. However, successive analytical steps overturned this impression: population adjustment redistributed apparent risk toward smaller inland localities; global Moran's I confirmed the
+absence of statistically significant spatial autocorrelation; and LISA identified only three Low–High outliers, with no true hotspots. Most critically, stratified Moran's I analyses demonstrated that the modest clustering signal in the unadjusted data dissolved entirely once smoking status was accounted for — identifying smoking as the primary spatial confounder.
+
+These findings underscore a fundamental principle of spatial epidemiology: apparent geographic clusters of disease cannot be interpreted at face value. Rigorous adjustment for population denominators and behavioral confounders is essential before attributing
+geographic gradients to environmental or other structural causes.
+
+## Limitations
+
+Several limitations constrain the interpretation of these findings.
+
+First, the dataset is hospital-based and subject to referral bias — patients residing closer to Carmel Medical Center are overrepresented, which may inflate apparent case density in the Haifa metropolitan area. 
+
+Second, the sample size of 94 cases limits statistical power for detecting subtle spatial patterns or subgroup differences. 
+
+Third, smoking history was recorded as a binary variable, precluding dose-response analysis.
+
+Fourth, ethnic origin was approximated from patient names and residential locality rather than confirmed by self-report, introducing potential misclassification.
+
+Finally, individual-level environmental exposure data were not available, preventing a formal assessment of gene-environment interactions — the original motivation for this study design.
+
+Future investigations combining population-based cancer registry data, individual-level exposure measurements, and larger molecularly characterized cohorts would be needed to address these limitations and draw causal conclusions.
+
+## Conclusions
+
+This analysis demonstrates that apparent geographic clustering of LC cases in Northern Israel, when subjected to rigorous spatial analysis, is explained by the uneven distribution of smoking prevalence and population size across localities rather than by independent
+environmental or structural risk factors. Global Moran's I showed no significant spatial autocorrelation (I = −0.008, p = 0.373), and LISA identified only three Low–High outliers — no true hotspots. Stratified analysis confirmed smoking as the primary spatial confounder.
+
+At the molecular level, the cohort mirrors internationally reported patterns: ACA was the dominant histological subtype, EGFR and KRAS were the most frequently altered actionable drivers, and PD-L1 positivity was concentrated in ACAs. These findings support the continued integration of comprehensive molecular profiling into routine LC diagnostics.
+
+The principal methodological contribution of this work is the demonstration that sequential adjustment — for population denominators, referral bias, and behavioral confounders — can overturn superficially compelling geographic patterns. This principle applies broadly in
+spatial epidemiology and is of particular relevance in hospital-based studies with limited catchment area coverage.
+
+Future works should prioritize population-based cohort designs, individual-level environmental exposure measurements, and extended molecular datasets to enable formal assessment of gene-environment interactions in lung carcinogenesis.
