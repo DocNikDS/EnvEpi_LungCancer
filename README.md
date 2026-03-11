@@ -4,7 +4,7 @@
 
 Nik Danilov, MD, MPH | School of Public Health, University of Haifa, Israel | 2025
 
-**[View the interactive report](https://DocNikDS.github.io/LUNG_CANCER)**
+**[View the interactive report](https://DocNikDS.github.io/LUNG_CANCER/Lung_Cancer.html)**
 
 ---
 
