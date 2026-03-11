@@ -13,7 +13,6 @@ renv.lock
 # Quarto intermediate files
 /.quarto/
 *_cache/
-*_files/libs/
 
 # OS artifacts
 .DS_Store
