@@ -72,6 +72,7 @@ LUNG_CANCER/
 ├── EnvEpi_LungCancer.qmd              # Source document (Quarto/R)
 ├── EnvEpi_LungCancer.html             # Rendered interactive report
 ├── EnvEpi_LungCancer.Rproj            # RStudio project file
+├── .gitattributes                     # Marks R as a primary tool 
 ├── .gitignore
 └── README.md
 ```
